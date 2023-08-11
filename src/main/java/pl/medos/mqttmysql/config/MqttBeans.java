@@ -3,6 +3,7 @@ package pl.medos.mqttmysql.config;
 
 
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -18,10 +19,14 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
+import pl.medos.mqttmysql.model.MqttMessage;
+import pl.medos.mqttmysql.service.MqttMessageService;
 
 
 @Configuration
 public class MqttBeans {
+	@Autowired
+	private MqttMessageService messageService;
 	
 	@Bean
 	public MqttPahoClientFactory mqttClientFactory() {
@@ -64,8 +69,14 @@ public class MqttBeans {
 			@Override
 			public void handleMessage(Message<?> message) throws MessagingException {
 				String topic = message.getHeaders().get(MqttHeaders.RECEIVED_TOPIC).toString();
+
 				if(topic.equals("montaz/Wiertarka_1")) {
 					System.out.println("Wiercenie stanowisko 1");
+					MqttMessage mqttMessage = new MqttMessage();
+					mqttMessage.setTopic(topic);
+					mqttMessage.setContent(message.getPayload().toString());
+					messageService.saveMessage(mqttMessage);
+
 				}
 				System.out.println(message.getPayload());
 			}
